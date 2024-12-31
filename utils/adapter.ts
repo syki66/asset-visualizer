@@ -1,3 +1,5 @@
+import { transactionTypeProps } from '@/types';
+
 export const shinhanCsvToJson = (csv: string) => {
   const lines = csv.trim().split('\r\n'); // 줄별로 나누기
 
@@ -24,19 +26,7 @@ export const shinhanCsvToJson = (csv: string) => {
   return json;
 };
 
-type transactionTypeProps = {
-  date: string;
-  type: string;
-  currency: string;
-  ISIN: string;
-  quantity: number | null;
-  price: number | null;
-  krwDeposit: number | null;
-  usdDeposit: number | null;
-  note: string;
-};
-
-export const shinhanJsonToCleanFormat = (json: any[]) => {
+export const makeShinhanJsonClean = (json: any[]) => {
   let _krwDeposit: number = 0;
   let _usdDeposit: number = 0;
   let _usdRp: number = 0;
@@ -48,10 +38,10 @@ export const shinhanJsonToCleanFormat = (json: any[]) => {
       type: '',
       currency: '',
       ISIN: '',
-      quantity: null,
-      price: null,
-      krwDeposit: null,
-      usdDeposit: null,
+      quantity: 0,
+      price: 0,
+      krwDeposit: 0,
+      usdDeposit: 0,
       note: '',
     };
 
