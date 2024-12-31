@@ -37,7 +37,6 @@ type transactionTypeProps = {
 };
 
 export const shinhanJsonToCleanFormat = (json: any[]) => {
-  console.log(json);
   let _krwDeposit: number = 0;
   let _usdDeposit: number = 0;
   let _usdRp: number = 0;

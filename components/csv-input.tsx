@@ -2,7 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { shinhanCsvToJson, shinhanJsonToCleanFormat } from '@/utils/converter';
+import { shinhanCsvToJson, shinhanJsonToCleanFormat } from '@/utils/adapter';
 import { ChangeEvent } from 'react';
 
 export default function csvInput() {
