@@ -1,11 +1,11 @@
 // import { Button } from '@/components/ui/button';
 
-import CustomInput from '@/components/csv-input';
+import DataVisualization from '@/components/data-visualization';
 
 export default function Home() {
   return (
     <>
-      <CustomInput />
+      <DataVisualization />
     </>
   );
 }

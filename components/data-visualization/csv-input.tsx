@@ -1,11 +1,10 @@
-'use client';
-
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { shinhanCsvToJson, shinhanJsonToCleanFormat } from '@/utils/adapter';
+import { shinhanCsvToJson, makeShinhanJsonClean } from '@/utils/adapter';
+import { formatJsonForGraph } from '@/utils/converter';
 import { ChangeEvent } from 'react';
 
-export default function csvInput() {
+export default function CsvInput({ setChartData }) {
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === 'text/csv') {
@@ -14,8 +13,9 @@ export default function csvInput() {
         const text = e.target?.result;
         if (typeof text === 'string') {
           const shinhanJson = shinhanCsvToJson(text);
-          const cleanJson = shinhanJsonToCleanFormat(shinhanJson);
-          console.log(cleanJson);
+          const cleanJson = makeShinhanJsonClean(shinhanJson);
+          const formattedJson = formatJsonForGraph(cleanJson);
+          setChartData(formattedJson);
         }
       };
       reader.readAsText(file);
