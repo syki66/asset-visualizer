@@ -27,9 +27,10 @@ export const shinhanCsvToJson = (csv: string) => {
 };
 
 export const makeShinhanJsonClean = (json: any[]) => {
-  let _krwDeposit: number = 0;
-  let _usdDeposit: number = 0;
-  let _usdRp: number = 0;
+  let _krwDeposit: number = 0; // 원화 예수금
+  let _krwIpoDeposit: number = 0; // 공모주 청약 증거금 (원화)
+  let _usdDeposit: number = 0; // USD 예수금
+  let _usdRp: number = 0; // USD RP 잔고
 
   const newJson = json.map((item) => {
     // 새로운 데이터 객체 생성
@@ -51,23 +52,39 @@ export const makeShinhanJsonClean = (json: any[]) => {
     }
 
     // KRW 예수금 값 업데이트
-    if (item['종목번호'] !== 'USD' && item['의뢰자명'] !== 'USD') {
+    if (
+      item['구분'] === '증금예금_증금예금상환' ||
+      item['구분'] === '증금예금_증금예금매수' ||
+      item['구분'] === '은행이체입금' ||
+      item['구분'] === '은행이체출금'
+    ) {
       _krwDeposit = Number(item['최종금액']);
     }
 
-    // USD 예수금 값 업데이트
-    if (item['종목번호'] === 'USD' || item['의뢰자명'] === 'USD') {
-      _usdDeposit = Number(item['최종금액']);
+    // 공모주 청약 증거금 값 업데이트
+    if (item['구분'] === '공모불입') {
+      _krwIpoDeposit = Number(item['거래대금']); // 공모주 청약 증거금 업데이트
+      _krwDeposit = Number(item['최종금액']); // 원화 잔고 업데이트
+    }
+    if (item['구분'] === '공모주환불금') {
+      _krwIpoDeposit = Number(item['가격']) * Number(item['수량']); // 배정 주식 평가액 업데이트
+      _krwDeposit = Number(item['최종금액']); // 원화 잔고 업데이트
+    }
+    if (item['구분'] === '공모주입고') {
+      _krwIpoDeposit = 0; // 공모주 청약 증거금 초기화
+      _krwDeposit = Number(item['최종금액']); // 원화 잔고 업데이트
     }
 
-    // USD_RP 잔고 값 업데이트
+    // USD_RP 잔고 및 USD 예수금 값 업데이트
     if (item['구분'] === '외화RP매수출금') {
-      _usdRp += Number(item['거래대금']);
+      _usdRp += Number(item['거래대금']); // USD RP 잔고 업데이트
       _usdRp = Number(_usdRp.toFixed(2));
+      _usdDeposit = Number(item['최종금액']); // USD 예수금 업데이트
     }
     if (item['구분'] === '외화RP매도입금') {
-      _usdRp -= Number(item['거래대금']);
+      _usdRp -= Number(item['거래대금']); // USD RP 잔고 업데이트
       _usdRp = Number(_usdRp.toFixed(2));
+      _usdDeposit = Number(item['최종금액']); // USD 예수금 업데이트
     }
 
     // 입금고 데이터 대입
@@ -82,7 +99,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = 1;
       _itemData.price = Number(item['거래대금']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
 
     // 출금고 데이터 대입
@@ -101,7 +118,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = 1;
       _itemData.price = Number(item['거래대금']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
 
     // 국내주식 매수, 매도 데이터 대입
@@ -120,7 +137,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = Number(item['수량']);
       _itemData.price = Number(item['가격']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
     if (isKrStockSell) {
       _itemData.date = item['일자'];
@@ -130,7 +147,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = Number(item['수량']);
       _itemData.price = Number(item['가격']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
 
     // 해외주식 매수, 매도 데이터 대입
@@ -149,7 +166,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = Number(item['수량']);
       _itemData.price = Number(item['가격']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
     if (isUsStockSell) {
       _itemData.date = item['일자'];
@@ -159,7 +176,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = Number(item['수량']);
       _itemData.price = Number(item['가격']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
 
     // 해외주식 배당금 데이터 대입
@@ -170,7 +187,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = 1;
       _itemData.price = Number(item['거래대금']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
 
     // 국내주식 배당금 데이터 대입
@@ -181,7 +198,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = 1;
       _itemData.price = Number(item['거래대금']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
 
     // 타사대체입고 데이터 대입(buy 및 deposit 두 곳 추가)
@@ -193,7 +210,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = Number(item['수량']);
       _itemData.price = Number(item['가격']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
     if (item['구분'] === '타사대체입고') {
       _itemData.date = item['일자'];
@@ -203,7 +220,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = Number(item['수량']);
       _itemData.price = Number(item['가격']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
 
     // 외화입금 데이터 대입
@@ -214,7 +231,7 @@ export const makeShinhanJsonClean = (json: any[]) => {
       _itemData.quantity = 1;
       _itemData.price = Number(item['거래대금']);
       _itemData.usdDeposit = _usdDeposit + _usdRp;
-      _itemData.krwDeposit = _krwDeposit;
+      _itemData.krwDeposit = _krwDeposit + _krwIpoDeposit;
     }
 
     return { ..._itemData };
