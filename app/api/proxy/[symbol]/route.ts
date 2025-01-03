@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { transformYahooHistoryData } from '@/app/services/data/transformData';
 
 const BASE_URL = 'https://query1.finance.yahoo.com/v8/finance/chart';
 
@@ -42,8 +43,9 @@ export async function GET(
     }
 
     const data = await response.json();
+    const transformData = transformYahooHistoryData(data);
 
-    return NextResponse.json(data);
+    return NextResponse.json(transformData);
   } catch (error) {
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
